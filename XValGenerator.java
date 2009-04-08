@@ -16,18 +16,16 @@ public class XValGenerator
     public static void main(String args[])
     {
 // args = new String[] { "-s",
-        "/home/martin/data/cpdb/hamster_carcinogenicity/data/hamster_carcinogenicity.smi"
-        ,
-        "-t",
+//        "/home/martin/data/cpdb/hamster_carcinogenicity/data/hamster_carcinogenicity.smi"
+//        ,
+//        "-t",
 // "/home/martin/data/cpdb/hamster_carcinogenicity/data/hamster_carcinogenicity.class",
-        "-o",
+//        "-o",
 // "/home/martin/tmp/xout", "-n", "10" };
 
-        String usage = "performs x-validation split on smile and class files
-                       (as used by lazar).\n" + "usage:\n"
+        String usage = "performs x-validation split on smile and class files (as used by lazar).\n" + "usage:\n"
                        + "-s <string>\tsmiles file\n" + "-t <string>\tclass file\n"
-                       + "-o <string>\tbase output filename
-                       (string.class/smi.foldX.train/test)\n" + "-n <number>\tnum folds\n";
+                       + "-o <string>\tbase output filename (string.class/smi.foldX.train/test)\n" + "-n <number>\tnum folds\n";
 
         GetOpt opt = new GetOpt(args, "s:t:o:n:");
 
@@ -84,12 +82,12 @@ public class XValGenerator
             File classTestFiles[] = new File[numFolds];
             for (int i = 0; i < numFolds; i++)
             {
-                classTrainFiles[i] = new File(outFile.getPath() + ".class.fold" + (i +
-                                              1) + ".train");
+                String path = outFile.getPath(); if (numFolds>1) path += ".fold" + (i+1); 
+                classTrainFiles[i] = new File(path + ".train.class");
                 if (classTrainFiles[i].exists())
                     throw new IllegalStateException("outfile already exists");
-                classTestFiles[i] = new File(outFile.getPath() + ".class.fold" + (i +
-                                             1) + ".test");
+                if (numFolds>1) path += ".test";
+                classTestFiles[i] = new File(path + ".class");
                 if (classTestFiles[i].exists())
                     throw new IllegalStateException("outfile already exists");
             }
@@ -98,11 +96,12 @@ public class XValGenerator
             File smiTestFiles[] = new File[numFolds];
             for (int i = 0; i < numFolds; i++)
             {
-                smiTrainFiles[i] = new File(outFile.getPath() + ".smi.fold" + (i + 1)
-                                            + ".train");
+                String path = outFile.getPath(); if (numFolds>1) path += ".fold" + (i+1); 
+                smiTrainFiles[i] = new File(path + ".train.smi");
                 if (smiTrainFiles[i].exists())
                     throw new IllegalStateException("outfile already exists");
-                smiTestFiles[i] = new File(outFile.getPath() + ".smi.fold" + (i + 1) + ".test");
+                if (numFolds>1) path += ".test";
+                smiTestFiles[i] = new File(path + ".smi");
                 if (smiTestFiles[i].exists())
                     throw new IllegalStateException("outfile already exists");
             }
@@ -129,7 +128,7 @@ public class XValGenerator
 
 // if (VERBOSE)
 // System.out.print((test ? "test  " : "train ") + (j + 1) + " " +
-                    smiFileContent.get(ordering[i]));
+                    smiFileContent.get(ordering[i]);
 
                     FileWriter w = new FileWriter(test ? smiTestFiles[j] : smiTrainFiles[j], true);
                     w.append(smiFileContent.get(ordering[i]));
