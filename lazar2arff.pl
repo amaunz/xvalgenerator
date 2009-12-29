@@ -3,8 +3,8 @@
 
 #!/usr/bin/perl
 
-$filename = $ARGV[0];
-$endpoint = $ARGV[1];
+$filename = $ARGV[0]; # base file name of feature and class file
+$endpoint = $ARGV[1]; # endpoint string present in class file
 
 
 ### READ CLASS FLE
@@ -31,7 +31,7 @@ printf(STDERR "Read $num_instances instances and class values\n");
 
 
 ### READ FRAGMENT FILE
-open(ATTRIBUTEFILE, "$filename.bbrc") or die "Cannot open file test";
+open(ATTRIBUTEFILE, "$filename.lastpm") or die "Cannot open file test";
 $fraq_count=0;
 for $line (<ATTRIBUTEFILE>) {
   @attributes[$fraq_count] = $line;
@@ -41,14 +41,17 @@ close ATTRIBUTEFILE;
 
 $fraq_count=0;
 foreach $line (sort @attributes) {
+  #printf(STDERR $line);
+
   $frag = $line;
   $frag =~ s/\t\[.*\n//;
   # array frags
   push(@frags, $frag);
 
   $instances = $line;
-  $instances =~ s/.*\[\s//;
-  $instances =~ s/\s\]//;
+  $instances =~ s/.*\t\[\s//;
+  $instances =~ s/\s\](?!.*\s\])//; # remove last brace, not the first hit to support class specific features
+  $instances =~ s/\s\]\s\[//;       # support class specific features: [ act ] [ inact ]
 
   @inst_array = split(/\s/, $instances);
 
@@ -85,10 +88,10 @@ foreach $instance (keys %classes) {
   print "{";
 
   # EITHER if fragment file has ids use this
-  #print "@attrib[$id_map{$inst_count}]"; 
+  print "@attrib[$id_map{$inst_count}]"; 
 
   # OR if fragment file has line numbers use this
-  print "@attrib[$inst_count]";
+  #print "@attrib[$inst_count]";
   
   # class file alway has ids, so that's ok:
   print " $fraq_count $classes{$id_map{$inst_count}}";
