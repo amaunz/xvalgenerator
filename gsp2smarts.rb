@@ -29,13 +29,29 @@ end
 nodes = Hash.new
 edges = Hash.new{ |h,k| h[k]=Hash.new(&h.default_proc) }
 
-File.open('test.gsp').each do |line|
+status=false
+if $*.size==0 || $*.size>1
+    status=true
+end
+
+if status
+    puts "Usage: #{$0} /path/to/gspfile.gsp" 
+    exit
+end
+
+puts $*[0]
+File.open($*[0]).each do |line|
   arr = line.split
-  if arr[0] == "v"
+  if arr[0]=="t"
+    to_smarts(0,nodes,edges) unless nodes.size == 0
+    nodes.clear
+    edges.clear
+  elsif arr[0] == "v"
     nodes[arr[1].to_i] = arr[2]
   elsif arr[0] == "e"
     edges[arr[1].to_i][arr[2].to_i] = arr[3]
+  else
+    die "Format error"
   end
 end
 
-to_smarts(0,nodes,edges)
