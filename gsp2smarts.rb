@@ -39,11 +39,11 @@ if status
     exit
 end
 
-puts $*[0]
 File.open($*[0]).each do |line|
   arr = line.split
   if arr[0]=="t"
     to_smarts(0,nodes,edges) unless nodes.size == 0
+    puts unless nodes.size == 0
     nodes.clear
     edges.clear
   elsif arr[0] == "v"
@@ -51,7 +51,8 @@ File.open($*[0]).each do |line|
   elsif arr[0] == "e"
     edges[arr[1].to_i][arr[2].to_i] = arr[3]
   else
-    die "Format error"
+    puts "Format Error!"
+    exit
   end
 end
 
