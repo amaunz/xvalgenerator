@@ -1,5 +1,5 @@
 # AM 2010
-# INPUT: instantiation matrix (+1,-1) CSV, target size n
+# INPUT: instantiation matrix (+1,-1) CSV w. 90% train and 10% test split, target size n
 # OUTPUT: matrix with n cols optimizing dispersion score 
 
 args <- commandArgs(TRUE)
@@ -13,6 +13,7 @@ x<-read.csv(args[1],header=FALSE)
 x<-as.matrix(x)
 
 nr_instances<-dim(x)[1]
+train_test_border<-as.integer(nr_instances * 0.9)
 nr_features<-dim(x)[2]-1
 act_index<-dim(x)[2]
 
@@ -49,10 +50,10 @@ for (count in 2:target_size) {
     for(i in features) { 
        disp_score_i<-0
        for (j in selected_features) {
-            dotp<-(x[,j]%*%x[,i])[1,1]
+            dotp<-(x[1:train_test_border,j]%*%x[1:train_test_border,i])[1,1]
             disp_score_i<-disp_score_i+dotp^2
        }
-       dotp<-(x[,act_index]%*%x[,i])[1,1]
+       dotp<-(x[1:train_test_border,act_index]%*%x[1:train_test_border,i])[1,1]
        disp_score_i<-disp_score_i-length(selected_features)*dotp^2
        if (disp_score_i < min) { 
            min<-disp_score_i
