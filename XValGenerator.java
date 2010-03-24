@@ -11,7 +11,7 @@ public class XValGenerator
 {
     public static boolean VERBOSE = true;
 
-    public static final long RANDOM_SEED = 100;
+    public static final long RANDOM_SEED = 59;
 
     public static void main(String args[])
     {
