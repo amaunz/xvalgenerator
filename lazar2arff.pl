@@ -31,7 +31,7 @@ printf(STDERR "Read $num_instances instances and class values\n");
 
 
 ### READ FRAGMENT FILE
-open(ATTRIBUTEFILE, "$filename.bbrc") or die "Cannot open file test";
+open(ATTRIBUTEFILE, "$filename.lastpm") or die "Cannot open file test";
 $fraq_count=0;
 for $line (<ATTRIBUTEFILE>) {
   @attributes[$fraq_count] = $line;

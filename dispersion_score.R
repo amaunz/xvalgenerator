@@ -9,7 +9,7 @@ target_size<-as.integer(args[2])
 print("Target size;")
 print(target_size)
 
-x<-read.csv(args[1],header=TRUE)
+x<-read.csv(args[1],header=T)
 x<-as.matrix(x)
 
 nr_instances<-dim(x)[1]
@@ -72,6 +72,6 @@ print(selected_features)
 
 outfile<-args[1]
 outfile<-paste(outfile,sep="",".disp")
-write.table(x[,selected_features],col.names=T,row.names=F,sep=",",outfile)
+write.table(x[,selected_features],col.names=F,row.names=F,sep=",",outfile)
 
 q(save="no")
