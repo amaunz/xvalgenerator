@@ -158,6 +158,8 @@ public class XValGenerator
                             w.append(smiFileContent.get(ordering[i]));
                             w.close();
 
+                            /*
+                             * AM: 
                             if (i == smiFileContent.size()-1) {
                                 for (int k=0; k<bck_smi.size() && actives>0; k++) {
                                     w = new FileWriter(test ? classTestFiles[j] : classTrainFiles[j], true);
@@ -171,6 +173,7 @@ public class XValGenerator
                                     actives-=1;
                                 }
                             }
+                            */
 
                             if (act == '0' && actives>0) actives -= 1;
                         }
