@@ -25,14 +25,16 @@ public class XValGenerator
 
         String usage = "performs x-validation split on smile and class files (as used by lazar).\n" + "usage:\n"
                        + "-s <string>\tsmiles file\n" + "-t <string>\tclass file\n"
-                       + "-o <string>\tbase output filename (string.X.train/test)\n" + "-n <number>\tnum folds\n" + "-b\tbalanced\n"; 
+                       + "-o <string>\tbase output filename (string.X.train/test)\n" + "-n <number>\tnum folds\n" + "-b <bool>\tbalanced\n"
+                       + "-p <number>\ttest percentage (for one fold only)\n"; 
 
-        GetOpt opt = new GetOpt(args, "s:t:o:n:b");
+        GetOpt opt = new GetOpt(args, "s:t:o:n:p:b");
 
         File smiFile = null;
         File classFile = null;
         File outFile = null;
         int numFolds = -1;
+        int testPercentage = 0;
         boolean balanced = false;
 
         try
@@ -48,6 +50,8 @@ public class XValGenerator
                     classFile = new File(opt.getOptionArg());
                 else if (o == 'n')
                     numFolds = Integer.parseInt(opt.getOptionArg());
+                else if (o == 'p')
+                    testPercentage = Integer.parseInt(opt.getOptionArg());
                 else if (o == 'b')
                     balanced = true;
             }
@@ -65,15 +69,19 @@ public class XValGenerator
             System.exit(1);
         }
 
-        new XValGenerator(smiFile, classFile, outFile, numFolds, balanced);
+        new XValGenerator(smiFile, classFile, outFile, numFolds, testPercentage, balanced);
     }
 
-    public XValGenerator(File smiFile, File classFile, File outFile, int numFolds, boolean balanced)
+    public XValGenerator(File smiFile, File classFile, File outFile, int numFolds, int testPercentage, boolean balanced)
     {
         try
         {
             Vector<String> smiFileContent = readFile(smiFile);
             Vector<String> classFileContent = readFile(classFile);
+
+            if (testPercentage>0 && (testPercentage > 100 || testPercentage < 1)) {
+                throw new IllegalStateException("test percentage illegal range");
+            }
 
             if (smiFileContent.size() != classFileContent.size())
                 throw new IllegalStateException("input files have different line count");
@@ -89,8 +97,7 @@ public class XValGenerator
                 classTrainFiles[i] = new File(path + ".train.class");
                 if (classTrainFiles[i].exists())
                     throw new IllegalStateException("outfile already exists");
-                if (numFolds>1) path += ".test";
-                classTestFiles[i] = new File(path + ".class");
+                classTestFiles[i] = new File(path + ".test.class");
                 if (classTestFiles[i].exists())
                     throw new IllegalStateException("outfile already exists");
             }
@@ -103,8 +110,7 @@ public class XValGenerator
                 smiTrainFiles[i] = new File(path + ".train.smi");
                 if (smiTrainFiles[i].exists())
                     throw new IllegalStateException("outfile already exists");
-                if (numFolds>1) path += ".test";
-                smiTestFiles[i] = new File(path + ".smi");
+                smiTestFiles[i] = new File(path + ".test.smi");
                 if (smiTestFiles[i].exists())
                     throw new IllegalStateException("outfile already exists");
             }
@@ -126,30 +132,31 @@ public class XValGenerator
             Vector<String> bck_cls = new Vector();
             for (int i = 0; i < smiFileContent.size(); i++)
             {
-                int x = i % numFolds;
 
-                for (int j = 0; j < numFolds; j++)
-                {
-                    boolean test = j == x;
 
-// if (VERBOSE)
-// System.out.print((test ? "test  " : "train ") + (j + 1) + " " +
-                    smiFileContent.get(ordering[i]);
+                // Mode for single test set
+                if (testPercentage != 0) {
+                    int cutoff = (int) (testPercentage/100.0f*smiFileContent.size());
+                    for (int j = 0; j < numFolds; j++) {
+                            FileWriter w = new FileWriter(cutoff > i ? classTestFiles[j] : classTrainFiles[j], true);
+                            w.append(classFileContent.get(ordering[i]));
+                            w.close();
 
-                    if (!balanced) {
-                        FileWriter w = new FileWriter(test ? classTestFiles[j] : classTrainFiles[j], true);
-                        w.append(classFileContent.get(ordering[i]));
-                        w.close();
-
-                        w = new FileWriter(test ? smiTestFiles[j] : smiTrainFiles[j], true);
-                        w.append(smiFileContent.get(ordering[i]));
-                        w.close();
+                            w = new FileWriter(cutoff > i ? smiTestFiles[j] : smiTrainFiles[j], true);
+                            w.append(smiFileContent.get(ordering[i]));
+                            w.close();
                     }
-                    else {
-                        char act = classFileContent.get(ordering[i]).trim().charAt(classFileContent.get(ordering[i]).trim().length()-1);
-                        if (act == '1') actives+=1;
-                        if (act == '0' && actives==0) { bck_smi.add(classFileContent.get(ordering[i])); bck_cls.add(classFileContent.get(ordering[i])); }
-                        if (act == '1' || actives>0) {
+                }
+
+
+                else {
+                    int x = i % numFolds;
+                    for (int j = 0; j < numFolds; j++) {
+                        boolean test = j == x;
+                        smiFileContent.get(ordering[i]);
+
+                        // Mode for unbalanced use
+                        if (!balanced) {
                             FileWriter w = new FileWriter(test ? classTestFiles[j] : classTrainFiles[j], true);
                             w.append(classFileContent.get(ordering[i]));
                             w.close();
@@ -157,28 +164,44 @@ public class XValGenerator
                             w = new FileWriter(test ? smiTestFiles[j] : smiTrainFiles[j], true);
                             w.append(smiFileContent.get(ordering[i]));
                             w.close();
-
-                            /*
-                             * AM: 
-                            if (i == smiFileContent.size()-1) {
-                                for (int k=0; k<bck_smi.size() && actives>0; k++) {
-                                    w = new FileWriter(test ? classTestFiles[j] : classTrainFiles[j], true);
-                                    w.append(bck_cls.elementAt(k));
-                                    w.close();
-
-                                    w = new FileWriter(test ? smiTestFiles[j] : smiTrainFiles[j], true);
-                                    w.append(bck_smi.elementAt(k));
-                                    w.close();
-
-                                    actives-=1;
-                                }
-                            }
-                            */
-
-                            if (act == '0' && actives>0) actives -= 1;
                         }
-                    }
 
+                        // Force balancing and loss of data
+                        else {
+                            char act = classFileContent.get(ordering[i]).trim().charAt(classFileContent.get(ordering[i]).trim().length()-1);
+                            if (act == '1') actives+=1;
+                            if (act == '0' && actives==0) { bck_smi.add(classFileContent.get(ordering[i])); bck_cls.add(classFileContent.get(ordering[i])); }
+                            if (act == '1' || actives>0) {
+                                FileWriter w = new FileWriter(test ? classTestFiles[j] : classTrainFiles[j], true);
+                                w.append(classFileContent.get(ordering[i]));
+                                w.close();
+
+                                w = new FileWriter(test ? smiTestFiles[j] : smiTrainFiles[j], true);
+                                w.append(smiFileContent.get(ordering[i]));
+                                w.close();
+
+                                /*
+                                 * AM: enable this to output also additional inactives
+                                if (i == smiFileContent.size()-1) {
+                                    for (int k=0; k<bck_smi.size() && actives>0; k++) {
+                                        w = new FileWriter(test ? classTestFiles[j] : classTrainFiles[j], true);
+                                        w.append(bck_cls.elementAt(k));
+                                        w.close();
+
+                                        w = new FileWriter(test ? smiTestFiles[j] : smiTrainFiles[j], true);
+                                        w.append(bck_smi.elementAt(k));
+                                        w.close();
+
+                                        actives-=1;
+                                    }
+                                }
+                                */
+
+                                if (act == '0' && actives>0) actives -= 1;
+                            }
+                        }
+
+                    }
                 }
             }
 
