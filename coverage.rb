@@ -19,17 +19,6 @@ File.open(ARGV[0].to_s, "r") { |file|
     vals = coverage.values
     vals.sort!
     c = StatArray.new(vals)
-
-    puts "Min: " << vals[0].to_s
-    puts "Max: " << vals[-1].to_s
-    puts "Median: " << c.median.to_s
-    puts "Mean: " << c.mean.to_s
-    puts "Variance: " << c.variance.to_s
-    puts "StdDev: " << c.stddev.to_s
-    puts "StdErr: " << c.stderr.to_s
-
-    vals.each { | val |
-        puts val
-    }
+    puts c.median.to_s << " " << c.mean.round.to_s << " " << c.variance.round.to_s
 
 }
