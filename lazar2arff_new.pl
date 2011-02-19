@@ -1,14 +1,20 @@
-# by M. Guetlein
-# convert lazar linfrag and class file to arff format
-
 #!/usr/bin/perl
 
-$filename = $ARGV[0]; # base file name of feature and class file
-$endpoint = $ARGV[1]; # endpoint string present in class file
+$numArgs = $#ARGV + 1;
+
+if ($numArgs != 3) {
+  printf "Usage: <class-file> <feature-file> <endpoint-string>\n";
+  exit 1;
+}
+
+
+$classfilename = $ARGV[0]; # file name of class file
+$fragfilename = $ARGV[1]; # file name of feature file
+$endpoint = $ARGV[2]; # endpoint string present in class file
 
 
 ### READ CLASS FLE
-open(CLASSFILE, "$filename.class") or die "Cannot open file test";
+open(CLASSFILE, "$classfilename") or die "Cannot open class file";
 $num_instances = 0;
 for $line (<CLASSFILE>) {
   $class = $line;
@@ -31,7 +37,7 @@ printf(STDERR "Read $num_instances instances and class values\n");
 
 
 ### READ FRAGMENT FILE
-open(ATTRIBUTEFILE, "$filename.lastpm") or die "Cannot open file test";
+open(ATTRIBUTEFILE, "$fragfilename") or die "Cannot open frag file";
 $fraq_count=0;
 for $line (<ATTRIBUTEFILE>) {
   @attributes[$fraq_count] = $line;

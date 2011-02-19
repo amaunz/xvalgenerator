@@ -1,7 +1,7 @@
+#!/usr/bin/perl
 # by M. Guetlein
 # convert lazar linfrag and class file to arff format
 
-#!/usr/bin/perl
 
 $filename = $ARGV[0]; # base file name of feature and class file
 $endpoint = $ARGV[1]; # endpoint string present in class file
